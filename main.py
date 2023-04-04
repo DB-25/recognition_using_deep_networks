@@ -15,12 +15,13 @@ import task1F
 
 # global variables
 n_epochs = 5
-batch_size_train = 30
+batch_size_train = 100
 batch_size_test = 1000
 learning_rate = 0.01
 momentum = 0.5
-log_interval = 10
-
+log_interval = 100
+# use gpu if available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Function to load the MNIST dataset
 def handleLoadingMNISTDataSet():
@@ -89,6 +90,7 @@ class NeuralNetwork(nn.Module):
 def train(epoch, train_loader, network, optimizer, train_losses, train_counter):
     network.train()
     for batch_idx, (data, target) in enumerate(train_loader):
+        data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = network(data)
         loss = F.nll_loss(output, target)
@@ -153,7 +155,7 @@ def main(argv):
 
     # Task 1D
     # initialize the neural network and the optimizer
-    network = NeuralNetwork()
+    network = NeuralNetwork().to(device)
     optimizer = optim.SGD(network.parameters(), lr=learning_rate, momentum=momentum)
 
     optimizer.zero_grad()
@@ -179,6 +181,7 @@ def main(argv):
     else:
         # load the model from a file
         network = task1F.loadNetwork()
+        network.to(device)
         network.eval()
         # test the model
         test(network, test_data, test_losses)
