@@ -12,6 +12,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 import task1F
+import task1G
 
 # global variables
 n_epochs = 5
@@ -198,6 +199,8 @@ def main(argv):
             plt.yticks([])
         plt.show()
 
+    # Task 1G
+    task1G.testNetworkOnHandWrittenDigits(network)
     # main function code
     return
 
