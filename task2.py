@@ -6,6 +6,7 @@
 import task1F
 import torch
 import cv2
+import numpy
 import matplotlib.pyplot as plt
 
 from main import handleLoadingMNISTDataSet
@@ -39,3 +40,19 @@ train_loader, test_loader = handleLoadingMNISTDataSet()
 testImage = test_loader.dataset[0][0]
 print("Shape of test image - {}".format(testImage.shape))
 
+with torch.no_grad():
+    plt.figure()
+    for i in range(len(network.conv1.weight)*2):
+        plt.subplot(5, 4, i+1)
+        plt.tight_layout()
+        if i % 2 == 0:
+            # display filter from network
+            plt.imshow(network.conv1.weight[i//2, 0], cmap="gray", interpolation='none')
+            plt.title("Filter {}".format(i//2 + 1))
+        else:
+            # apply filter to test image
+            plt.imshow(cv2.filter2D(testImage[0].numpy(), -1, network.conv1.weight[i//2, 0].numpy()), cmap="gray", interpolation='none')
+            plt.title("Filtered Image {}".format(i//2 + 1))
+        plt.xticks([])
+        plt.yticks([])
+    plt.show()
