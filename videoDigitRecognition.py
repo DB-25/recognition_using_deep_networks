@@ -1,9 +1,11 @@
 import cv2
 import numpy as np
 import torch
+from task1F import loadNetwork
 
 # Load the PyTorch model
-model = torch.load("path/to/model.pt")
+# model = torch.load("path/to/model.pt")
+model = loadNetwork()
 
 # Initialize the video capture object
 cap = cv2.VideoCapture(0)
@@ -11,6 +13,7 @@ cap = cv2.VideoCapture(0)
 while True:
     # Capture a frame from the video stream
     ret, frame = cap.read()
+    # frame = cv2.imread("DB-25/recognition_using_deep_networks/files/handwrittenDigits/0/0.jpg")
 
     # Convert the frame to grayscale
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)

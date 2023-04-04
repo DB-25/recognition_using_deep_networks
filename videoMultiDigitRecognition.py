@@ -1,9 +1,11 @@
 import cv2
 import numpy as np
 import torch
+from task1F import loadNetwork
 
 # Load the PyTorch model
-model = torch.load("path/to/model.pt")
+# model = torch.load("path/to/model.pt")
+model = loadNetwork()
 
 # Initialize the video capture object
 cap = cv2.VideoCapture(0)
