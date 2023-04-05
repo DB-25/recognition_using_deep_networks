@@ -12,10 +12,10 @@ from main import plotLosses as plotLosses
 import matplotlib.pyplot as plt
 
 # hyper-parameters
-learning_rate = 0.01
-epochs = 200
-batch_size = 50
-momentum = 0.5
+learning_rate = 0.001
+epochs = 300
+train_batch_size = 5
+test_batch_size = 10
 
 # setting the seed
 torch.manual_seed(2502)
@@ -49,7 +49,7 @@ greek_train = torch.utils.data.DataLoader(
                                                                                GreekTransform(),
                                                                                torchvision.transforms.Normalize(
                                                                                    (0.1307,), (0.3081,))])),
-    batch_size=batch_size,
+    batch_size=train_batch_size,
     shuffle=True)
 
 greek_test = torch.utils.data.DataLoader(
@@ -58,15 +58,18 @@ greek_test = torch.utils.data.DataLoader(
                                                                                GreekTransform(),
                                                                                torchvision.transforms.Normalize(
                                                                                    (0.1307,), (0.3081,))])),
-    batch_size=batch_size,
+    batch_size=test_batch_size,
     shuffle=True)
 
 # printing the modified network
 network = loadNetwork()
 print(network)
 
+# optimizer
+optimizer = optim.SGD(network.fc2.parameters(), lr=learning_rate)
+
 # method to train the network
-def train(epoch, network, optimizer, train_losses, train_counter):
+def train(epoch, network, train_losses, train_counter):
     network.train()
     for batch_idx, (data, target) in enumerate(greek_train):
         optimizer.zero_grad()
@@ -74,7 +77,6 @@ def train(epoch, network, optimizer, train_losses, train_counter):
         loss = F.nll_loss(pred, target)
         loss.backward()
         optimizer.step()
-        # plotting training error
         if batch_idx % 10 == 0:
             print("Epoch: {} \tLoss: {:.6f}".format(
                 epoch, loss.item()))
@@ -82,7 +84,6 @@ def train(epoch, network, optimizer, train_losses, train_counter):
             train_counter.append(
                 (batch_idx * 64) + ((epoch - 1) * len(greek_train.dataset)))
             torch.save(network.state_dict(), './results/model_greek.pth')
-            torch.save(optimizer.state_dict(), './results/optimizer_greek.pth')
 
 # method to test the network
 def test(network, test_losses):
@@ -112,7 +113,6 @@ def getLabel(index):
 
 # training the network
 network.train()
-optimizer = optim.SGD(network.fc2.parameters(), lr=learning_rate, momentum=momentum)
 optimizer.zero_grad()
 
 # loss params
@@ -123,7 +123,7 @@ test_counter = [i * len(greek_train.dataset) for i in range(epochs + 1)]
 
 test(network, test_losses)
 for epoch in range(1, epochs+1):
-    train(epoch, network, optimizer, train_losses, train_counter)
+    train(epoch, network, train_losses, train_counter)
     test(network, test_losses)
 torch.save(network.state_dict(), './results/model_greek.pth')
 # plotting the losses
@@ -154,7 +154,7 @@ batch_idx_train, (example_data_train, example_targets_train) = next(examples2)
 with torch.no_grad():
     output_train = network(example_data_train)
 plt.figure()
-for i in range(6):
+for i in range(5):
     plt.subplot(2, 3, i+1)
     plt.tight_layout()
     plt.imshow(example_data_train[i][0], cmap='gray', interpolation='none')
