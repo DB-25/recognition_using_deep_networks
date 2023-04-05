@@ -6,9 +6,7 @@
 import task1F
 import torch
 import cv2
-import numpy
 import matplotlib.pyplot as plt
-
 from main import handleLoadingMNISTDataSet
 
 # get the saved network
