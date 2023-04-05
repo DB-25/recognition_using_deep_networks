@@ -12,10 +12,13 @@ from main import plotLosses as plotLosses
 import matplotlib.pyplot as plt
 
 # hyper-parameters
-learning_rate = 0.001
+learning_rate = 0.01
 epochs = 200
-batch_size = 10
+batch_size = 50
 momentum = 0.5
+
+# setting the seed
+torch.manual_seed(2502)
 
 # method to load the network and replace the last layer with a new layer
 def loadNetwork():
@@ -99,12 +102,12 @@ def test(network, test_losses):
         100. * correct / len(greek_test.dataset)))
 
 # method to get the label
-def getLabel(label):
-    if label == 0:
+def getLabel(index):
+    if index == 0:
         return "Alpha"
-    elif label == 1:
+    elif index == 1:
         return "Beta"
-    elif label == 2:
+    elif index == 2:
         return "Gamma"
 
 # training the network
@@ -130,15 +133,33 @@ examples = enumerate(greek_test)
 batch_idx, (example_data, example_targets) = next(examples)
 
 # predicting the output for the first 6 image in the test set
+network.eval()
 with torch.no_grad():
     output = network(example_data)
 plt.figure()
-for i in range(6):
-    plt.subplot(2, 3, i+1)
+for i in range(9):
+    plt.subplot(3, 3, i+1)
     plt.tight_layout()
     plt.imshow(example_data[i][0], cmap='gray', interpolation='none')
     plt.title("Predicted: {}".format(
         getLabel(output.data.max(1, keepdim=True)[1][i].item())))
+    plt.xticks([])
+    plt.yticks([])
+plt.show()
+
+# just to see how it performs on training data
+network.eval()
+examples2 = enumerate(greek_train)
+batch_idx_train, (example_data_train, example_targets_train) = next(examples2)
+with torch.no_grad():
+    output_train = network(example_data_train)
+plt.figure()
+for i in range(6):
+    plt.subplot(2, 3, i+1)
+    plt.tight_layout()
+    plt.imshow(example_data_train[i][0], cmap='gray', interpolation='none')
+    plt.title("Predicted Train: {}".format(
+        getLabel(output_train.data.max(1, keepdim=True)[1][i].item())))
     plt.xticks([])
     plt.yticks([])
 plt.show()
