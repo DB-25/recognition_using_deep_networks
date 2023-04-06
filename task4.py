@@ -43,6 +43,9 @@ torch.set_grad_enabled(True)     # On by default, leave it here for clarity
 print(torch.__version__)
 print(torchvision.__version__)
 
+# use gpu if available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # Use standard FashionMNIST dataset
 train_set = torchvision.datasets.FashionMNIST(
     root = './data/FashionMNIST',
@@ -301,15 +304,15 @@ def _get_accuracy(preds, labels):
 params = OrderedDict(
     lr = [.01, .001],
     batch_size = [100, 1000],
-    shuffle = [False, True],
+    shuffle = [True],
     epochs = [5,10],
-    conv_channels = [[6,12], [12,12], [8,16]], 
-    conv_kernel_size = [3,5,88],
-    pool_kernel_size = [3,6,9], 
-    pool_stride = [1, 2, 3],
-    dropout_rate = [0.1, 0.5, 0.7], 
-    hidden_layers = [[120, 60], [512,256], [1024,512]], 
-    activation = [nn.ReLU(), nn.ReLU6(), nn.Tanh()],
+    conv_channels = [[6,12], [8,16]], 
+    conv_kernel_size = [3,5],
+    pool_kernel_size = [2,3], 
+    pool_stride = [1, 2],
+    dropout_rate = [0.1, 0.5], 
+    hidden_layers = [[120, 60], [512,256]], 
+    activation = [nn.ReLU(), nn.Tanh()],
 )
 
 m = RunManager()
@@ -319,7 +322,7 @@ for run in RunBuilder.get_runs(params):
 
     # if params changes, following line of code should reflect the changes too
     # network = Network()
-    network = Network(run.conv_channels, run.conv_kernel_size, run.pool_kernel_size, run.pool_stride, run.dropout_rate, run.hidden_layers, run.activation)
+    network = Network(run.conv_channels, run.conv_kernel_size, run.pool_kernel_size, run.pool_stride, run.dropout_rate, run.hidden_layers, run.activation).to(device)
     
     print(network)
     loader = torch.utils.data.DataLoader(train_set, batch_size = run.batch_size, shuffle = run.shuffle)
@@ -331,8 +334,8 @@ for run in RunBuilder.get_runs(params):
       m.begin_epoch()
       for batch in loader:
         
-        images = batch[0]
-        labels = batch[1]
+        images = batch[0].to(device)
+        labels = batch[1].to(device)
         preds = network(images)
         loss = F.cross_entropy(preds, labels)
 
