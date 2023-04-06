@@ -301,7 +301,7 @@ def _get_accuracy(preds, labels):
 params = OrderedDict(
     lr = [.01, .001],
     batch_size = [100, 1000],
-    shuffle = [False],
+    shuffle = [False, True],
     epochs = [5,10],
     conv_channels = [[6,12], [12,12], [8,16]], 
     conv_kernel_size = [3,5,88],
