@@ -47,6 +47,10 @@ while True:
 
         # Resize the masked grayscale frame to the same size as the images used to train the PyTorch model
         resized = cv2.resize(masked_gray, (28, 28))
+        resized = cv2.bitwise_not(resized)
+
+        cv2.imshow("Cropped digit", resized)
+
 
         # Convert the resized frame to a PyTorch tensor
         tensor = torch.from_numpy(np.array([resized])).float()

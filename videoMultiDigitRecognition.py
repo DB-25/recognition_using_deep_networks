@@ -30,12 +30,15 @@ while True:
         if w >= 5 and h >= 25:
             digit = gray[y:y + h, x:x + w]
             digit = cv2.resize(digit, (28, 28))
+            digit = cv2.bitwise_not(digit)
             digits.append(digit)
 
     # If any digits were found, use the model to predict the digits in the captured frame
     if digits:
+        for digit in digits:
+            cv2.imshow("Digits- segmented", digit)
         # Convert the digits to a PyTorch tensor
-        tensor = torch.from_numpy(np.array(digits)).float()
+        tensor = torch.from_numpy(np.array(digits)).unsqueeze(1).float()
 
         # Use the model to predict the digits
         output = model(tensor)
@@ -49,7 +52,8 @@ while True:
             (x, y, w, h) = cv2.boundingRect(contour)
             if w >= 5 and h >= 25:
                 digit = predicted_digits[i].item()
-                cv2.putText(frame, str(digit), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                if output[i][digit].item() >=0:
+                    cv2.putText(frame, str(digit), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                 i += 1
 
     # Display the frame

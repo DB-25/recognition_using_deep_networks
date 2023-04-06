@@ -1,9 +1,28 @@
-
+import warnings
+warnings.filterwarnings("ignore")
 
 import torch
+import torch.nn.functional as F
+
 import numpy as np
 import cv2
+import torch.optim as optim
 from task1F import loadNetwork
+from main import handleLoadingMNISTDataSet, test
+
+# set the random seed
+torch.manual_seed(2502)
+torch.backends.cudnn.enabled = False
+
+# global variables
+n_epochs = 5
+batch_size_train = 100
+batch_size_test = 1000
+learning_rate = 0.01
+momentum = 0.5
+log_interval = 100
+# use gpu if available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # define Gabor filter parameters
 in_channels = 1
@@ -42,10 +61,47 @@ def gaussian_filter_weights(in_channels, out_channels, kernel_size, sigma):
 
 
 
+# method to train the network
+def train(epoch, train_loader, network, optimizer, train_losses, train_counter):
+    network.train()
+    for batch_idx, (data, target) in enumerate(train_loader):
+        data, target = data.to(device), target.to(device)
+        optimizer.zero_grad()
+        output = network(data)
+        loss = F.nll_loss(output, target)
+        loss.backward()
+        optimizer.step()
+        if batch_idx % log_interval == 0:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * len(data), len(train_loader.dataset), 100. * batch_idx / len(train_loader),
+                loss.item()))
+            train_losses.append(loss.item())
+            train_counter.append(
+                (batch_idx * 64) + ((epoch - 1) * len(train_loader.dataset)))
+            
+
+
+
+# load the MNIST dataset
+train_data, test_data = handleLoadingMNISTDataSet()
+
+
+
+train_losses = []
+train_counter = []
+test_losses = []
+test_counter = [i * len(train_data.dataset) for i in range(n_epochs + 1)]
+
 # load the saved models
 gabor_model = loadNetwork()
+gabor_optimizer = optim.SGD(gabor_model.parameters(), lr=learning_rate, momentum=momentum)
+
 laplacian_model = loadNetwork()
+laplacian_optimizer = optim.SGD(laplacian_model.parameters(), lr=learning_rate, momentum=momentum)
+
 gaussian_model = loadNetwork()
+gaussian_optimizer = optim.SGD(gaussian_model.parameters(), lr=learning_rate, momentum=momentum)
+
 
 # test the models with some input data
 input_data = cv2.imread(r"D:/Users/mohit/MK/PRCV/Project5/recognition_using_deep_networks-master/files/handwrittenDigits/0/0.jpg", cv2.IMREAD_GRAYSCALE)
@@ -56,6 +112,11 @@ gabor_weights = gabor_filter_weights(in_channels, out_channels, kernel_size, sig
 gabor_model.conv1.weight.data = gabor_weights
 gabor_model.conv1.weight.requires_grad = False
 
+print("Gabor model training")
+for epoch in range(1, n_epochs + 1):
+    train(epoch, train_data, gabor_model, gabor_optimizer, train_losses, train_counter)
+    test(gabor_model, test_data, test_losses)
+
 gabor_output = gabor_model(input_tensor)
 print("Gabor Filter Model:", gabor_output.argmax().item())
 
@@ -64,6 +125,11 @@ laplacian_weights = laplacian_filter_weights(in_channels, out_channels)
 laplacian_model.conv1.weight.data = laplacian_weights.float()
 laplacian_model.conv1.weight.requires_grad = False
 
+print("Laplacian model training")
+for epoch in range(1, n_epochs + 1):
+    train(epoch, train_data, laplacian_model, laplacian_optimizer, train_losses, train_counter)
+    test(laplacian_model, test_data, test_losses)
+
 laplacian_output = laplacian_model(input_tensor)
 print("Laplacian Filter Model:", laplacian_output.argmax().item())
 
@@ -71,6 +137,11 @@ print("Laplacian Filter Model:", laplacian_output.argmax().item())
 gaussian_weights = gaussian_filter_weights(in_channels, out_channels, kernel_size, sigma)
 gaussian_model.conv1.weight.data = gaussian_weights
 gaussian_model.conv1.weight.requires_grad = False
+
+print("Gaussian model training")
+for epoch in range(1, n_epochs + 1):
+    train(epoch, train_data, gaussian_model, gaussian_optimizer, train_losses, train_counter)
+    test(gaussian_model, test_data, test_losses)
 
 gaussian_output = gaussian_model(input_tensor)
 print("Gaussian Filter Model:", gaussian_output.argmax().item())
