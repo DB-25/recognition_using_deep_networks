@@ -182,6 +182,7 @@ class RunManager():
     self.tb = SummaryWriter(comment=f'-{self.run_count}')
 
     images, labels = next(iter(self.loader))
+    images, labels = images.to(device), labels.to(device)
     grid = torchvision.utils.make_grid(images)
 
     self.tb.add_image('images', grid)
@@ -196,6 +197,8 @@ class RunManager():
     train_preds = get_all_preds(network, prediction_loader)
     test_prediction_loader = torch.utils.data.DataLoader(test_set, batch_size)
     test_preds = get_all_preds(network, test_prediction_loader)
+    train_set.targets = train_set.targets.to('cpu')
+    test_set.targets = test_set.targets.to('cpu')
     train_cm = confusion_matrix(train_set.targets, train_preds.argmax(dim=1))
     test_cm = confusion_matrix(test_set.targets, test_preds.argmax(dim=1))
     print("Train Confusion Matrix = ",train_cm)
@@ -283,17 +286,19 @@ class RunManager():
     with open(f'{fileName}.json', 'w', encoding='utf-8') as f:
       json.dump(self.run_data, f, ensure_ascii=False, indent=4)
 
-# helper function to calculate all predictions of train set
+# helper function to calculate all predictions of train set, make use of GPU
 def get_all_preds(model, loader):
   all_preds = torch.tensor([])
+  all_preds = all_preds.to(device)
   for batch in loader:
     images, labels = batch
-
+    images, labels = images.to(device), labels.to(device)
     preds = model(images)
     all_preds = torch.cat(
         (all_preds, preds),
         dim = 0
     )
+  all_preds = all_preds.to('cpu')
   return all_preds
 
 @torch.no_grad()

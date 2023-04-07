@@ -11,6 +11,7 @@ import torch.optim as optim
 from main import plotLosses as plotLosses
 import matplotlib.pyplot as plt
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # hyper-parameters
 learning_rate = 0.01
@@ -64,7 +65,7 @@ greek_test = torch.utils.data.DataLoader(
     shuffle=True)
 
 # printing the modified network
-network = loadNetwork()
+network = loadNetwork().to(device)
 print(network)
 
 # optimizer
@@ -74,6 +75,7 @@ optimizer = optim.SGD(network.fc2.parameters(), lr=learning_rate)
 def train(epoch, network, train_losses, train_counter):
     network.train()
     for batch_idx, (data, target) in enumerate(greek_train):
+        data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         pred = network(data)
         loss = F.cross_entropy(pred, target)
@@ -100,6 +102,7 @@ def test(network, test_losses):
     correct = 0
     with torch.no_grad():
         for data, target in greek_test:
+            data, target = data.to(device), target.to(device)
             output = network(data)
             test_loss += F.cross_entropy(output, target, size_average=False).item()
             pred = output.data.max(1, keepdim=True)[1]
@@ -143,8 +146,9 @@ batch_idx, (example_data, example_targets) = next(examples)
 # predicting the output for the first 6 image in the test set
 network.eval()
 with torch.no_grad():
-    output = network(example_data)
+    output = network(example_data.to(device))
 plt.figure()
+example_data = example_data.to('cpu')
 for i in range(9):
     plt.subplot(3, 3, i+1)
     plt.tight_layout()
@@ -160,8 +164,9 @@ network.eval()
 examples2 = enumerate(greek_train)
 batch_idx_train, (example_data_train, example_targets_train) = next(examples2)
 with torch.no_grad():
-    output_train = network(example_data_train)
+    output_train = network(example_data_train.to(device))
 plt.figure()
+example_data_train = example_data_train.to('cpu')
 for i in range(5):
     plt.subplot(2, 3, i+1)
     plt.tight_layout()

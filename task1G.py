@@ -7,6 +7,11 @@ import torch
 import torchvision
 import matplotlib.pyplot as plt
 
+
+# use gpu if available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
 # function to load the test images from directory
 def loadTestImages():
     # load the test images from the directory
@@ -27,10 +32,12 @@ def testNetworkOnHandWrittenDigits(network):
     # for each image in the test data
     # get the prediction from the network
     with torch.no_grad():
+        testDataset = testDataset.to(device)
         predictions = network(testDataset)
 
     # let's plot the images with respective predictions
     plt.figure()
+    testDataset = testDataset.cpu()
     for i in range(len(testDataset)):
         plt.subplot(4, 3, i + 1)
         plt.tight_layout()

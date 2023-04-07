@@ -14,8 +14,11 @@ import torch.optim as optim
 import task1F
 import task1G
 
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+
 # global variables
-n_epochs = 5
+n_epochs = 50
 batch_size_train = 100
 batch_size_test = 1000
 learning_rate = 0.01
@@ -115,6 +118,7 @@ def test(network, test_loader, test_losses):
     correct = 0
     with torch.no_grad():
         for data, target in test_loader:
+            data, target = data.to(device), target.to(device)
             output = network(data)
             test_loss += F.nll_loss(output, target, size_average=False).item()
             pred = output.data.max(1, keepdim=True)[1]
@@ -143,7 +147,7 @@ def main(argv):
 
     # set the random seed - task 1B
     torch.manual_seed(2502)
-    torch.backends.cudnn.enabled = False
+    # torch.backends.cudnn.enabled = False
 
     # load the MNIST dataset
     train_data, test_data = handleLoadingMNISTDataSet()
@@ -188,8 +192,9 @@ def main(argv):
         test(network, test_data, test_losses)
         # print predictions for 9 images in the test set
         with torch.no_grad():
-            output = network(example_data)
+            output = network(example_data.to(device))
         plt.figure()
+        example_data = example_data.to('cpu')
         for i in range(9):
             plt.subplot(3, 3, i + 1)
             plt.tight_layout()

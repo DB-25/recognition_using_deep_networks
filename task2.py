@@ -9,6 +9,7 @@ import cv2
 import matplotlib.pyplot as plt
 from main import handleLoadingMNISTDataSet
 
+
 # get the saved network
 network = task1F.loadNetwork()
 
