@@ -11,11 +11,13 @@ import torch.optim as optim
 from main import plotLosses as plotLosses
 import matplotlib.pyplot as plt
 
+
 # hyper-parameters
-learning_rate = 0.001
+learning_rate = 0.01
 epochs = 300
-train_batch_size = 5
-test_batch_size = 10
+train_batch_size = 16
+test_batch_size = 16
+reg_lambda = 0.01
 
 # setting the seed
 torch.manual_seed(2502)
@@ -74,7 +76,13 @@ def train(epoch, network, train_losses, train_counter):
     for batch_idx, (data, target) in enumerate(greek_train):
         optimizer.zero_grad()
         pred = network(data)
-        loss = F.nll_loss(pred, target)
+        loss = F.cross_entropy(pred, target)
+        # add L2 regularization to the loss function
+        regularization_loss = 0
+        for param in network.parameters():
+            regularization_loss += torch.sum(torch.square(param))
+        # Regularized loss - to prevent overfit
+        loss = loss + reg_lambda*regularization_loss
         loss.backward()
         optimizer.step()
         if batch_idx % 10 == 0:
@@ -93,7 +101,7 @@ def test(network, test_losses):
     with torch.no_grad():
         for data, target in greek_test:
             output = network(data)
-            test_loss += F.nll_loss(output, target, size_average=False).item()
+            test_loss += F.cross_entropy(output, target, size_average=False).item()
             pred = output.data.max(1, keepdim=True)[1]
             correct += pred.eq(target.data.view_as(pred)).sum()
     test_loss /= len(greek_test.dataset)
