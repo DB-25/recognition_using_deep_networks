@@ -1,10 +1,7 @@
 # Project 5
 
 Authors: Yalala Mohit & Dhruv Kamalesh Kumar
-Late days used:
-        3 late days have been used.
-
-OS : Windows, VS code.
+OS: Windows, VS code.
 
 How to run:
         execute each file as "python filename.py" to execute each task.
